@@ -1,10 +1,12 @@
 var p1GamesWon = 0;
 var p2GamesWon = 0;
 
-var serverScore = "0";
-var receiverScore = "0";
+var p1Score = "0";
+var p2Score = "0";
 
 var firstServer;
+
+var statFile = require("Storage").open("tennisstats.csv","a");
 
 var Layout = require("Layout");
 
@@ -18,8 +20,8 @@ function drawStartScreen() {
     var layout = new Layout( {
         type:"v", c: [
             {type:"txt", font: "6x8:2", label:"First server?", pad:"20"},
-            {type:"btn", label:"Player 1", cb: l=>startGame(0), pad:"10"},
-            {type:"btn", label:"Player 2", cb: l=>startGame(1), pad:"10"}
+            {type:"btn", label:"Me", cb: l=>startGame(0), pad:"10"},
+            {type:"btn", label:"Opponent", cb: l=>startGame(1), pad:"10"}
         ]
     });
     draw(layout);
@@ -34,8 +36,8 @@ function drawScoreScreen() {
         {type:"img", src:maybeDrawBall((firstServer + 1) % 2), fillx:1}
     ]},
       {type:"h", c: [
-        {type:"btn", font:"25%", label:serverScore, cb: l=>incScore(layout.p1, layout.p2), id:"p1", pad:"10"},
-        {type:"btn", font:"25%", label:receiverScore, cb: l=>incScore(layout.p2, layout.p1), id:"p2", pad:"10"}
+        {type:"btn", font:"25%", label:p1Score, cb: l=>incScore(layout.p1, layout.p2), id:"p1", pad:"10"},
+        {type:"btn", font:"25%", label:p2Score, cb: l=>incScore(layout.p2, layout.p1), id:"p2", pad:"10"}
       ], filly:"1"}
     ]
   });
@@ -87,16 +89,26 @@ function incScore(scorer, otherPlayer) {
   // else call a function to reset the game score and update the set score
   if (!gameEnd) {
     if (scorer.id == "p1") {
-        serverScore = newScore; 
-        receiverScore = otherPlayerScore;
+        p1Score = newScore; 
+        p2Score = otherPlayerScore;
     } else {
-        receiverScore = newScore;
-        serverScore = otherPlayerScore;
+        p2Score = newScore;
+        p1Score = otherPlayerScore;
     }
+    writeToCsv();
     drawScoreScreen();
   } else {
     endGame(scorer);
   }
+}
+
+function writeToCsv() {
+  var csv = [
+    p1Score,
+    p2Score,
+  ];
+  // Write data here
+  file.write(csv.join(",")+"\n");
 }
 
 function endGame(winner) {
@@ -109,8 +121,8 @@ function endGame(winner) {
     Terminal.println("Set won!");
   } else {
     firstServer = (firstServer + 1) % 2;
-    serverScore = "0";
-    receiverScore = "0";
+    p1Score = "0";
+    p2Score = "0";
     drawScoreScreen();
   }
 }
